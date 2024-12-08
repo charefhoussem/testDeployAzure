@@ -13,7 +13,7 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sshagent(['vm-ssh-credentials-id']) {
+                sshagent(['1']) {
                     sh '''
                         scp target/${APP_NAME}.jar ${VM_USER}@${VM_HOST}:/home/${VM_USER}/
                         ssh ${VM_USER}@${VM_HOST} "nohup java -jar /home/${VM_USER}/${APP_NAME}.jar > /dev/null 2>&1 &"
