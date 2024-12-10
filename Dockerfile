@@ -1,14 +1,16 @@
-# Use a lightweight OpenJDK image as the base image
-FROM openjdk:17-jdk-slim
+# Build Stage
+WORKDIR /opt/app
 
-# Set the working directory in the container
-WORKDIR /app
+COPY ./ /opt/app
+RUN mvn clean install -DskipTests
 
-# Copy the JAR file to the container
-COPY target/app.jar app.jar
 
-# Expose the port your application listens on (default for Spring Boot is 8080)
-EXPOSE 8089
+# Docker Build Stage
+FROM  openjdk:17-jdk-slim
 
-# Command to run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY --from=build /opt/app/target/*.jar app.jar
+
+ENV PORT 8081
+EXPOSE $PORT
+
+ENTRYPOINT ["java","-jar","-Xmx1024M","-Dserver.port=${PORT}","app.jar"]

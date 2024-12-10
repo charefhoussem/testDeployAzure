@@ -16,7 +16,7 @@ public class VisionController {
     @GetMapping("/analyze")
     public String analyzeImage(@RequestParam String imageUrl) {
         try {
-            return azureVisionService.analyzeImage(imageUrl);
+            return azureVisionService.describeImage(imageUrl);
         } catch (Exception e) {
             e.printStackTrace();
             return "Error analyzing image: " + e.getMessage();

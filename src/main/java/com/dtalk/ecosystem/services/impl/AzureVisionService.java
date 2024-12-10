@@ -1,9 +1,10 @@
 package com.dtalk.ecosystem.services.impl;
 
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -11,39 +12,45 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class AzureVisionService {
 
-    private final String subscriptionKey = "2XdfUdUyPOe6kwEZondXHjfgeM5h2P8EzGm4pyHY3nA9TLSPVBMJJQQJ99ALACYeBjFXJ3w3AAAFACOGbJhn";
-    private final String endpoint = "https://stalk.cognitiveservices.azure.com/";
+    private final String API_KEY = "2XdfUdUyPOe6kwEZondXHjfgeM5h2P8EzGm4pyHY3nA9TLSPVBMJJQQJ99ALACYeBjFXJ3w3AAAFACOGbJhn";
+    private final String API_ENDPOINT = "https://stalk.cognitiveservices.azure.com/vision/v3.2/analyze";
 
-    public String analyzeImage(String imageUrl) throws Exception {
-        String uri = endpoint + "/vision/v3.2/analyze?visualFeatures=Description,Tags";
 
-        // Create HTTP client
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost request = new HttpPost(uri);
 
-            // Set headers
-            request.setHeader("Content-Type", "application/json");
-            request.setHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
 
-            // Set request body
-            StringEntity requestBody = new StringEntity("{\"url\":\"" + imageUrl + "\"}");
-            request.setEntity(requestBody);
+    public String describeImage(String imageUrl) throws Exception {
+        String visionUrl = API_ENDPOINT + "?visualFeatures=Description";
 
-            // Execute request
-            HttpResponse response = httpClient.execute(request);
-            HttpEntity entity = response.getEntity();
+        // Build request payload
+        Map<String, String> payload = new HashMap<>();
+        payload.put("url", imageUrl);
 
-            if (entity != null) {
-                // Parse the response
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode jsonResponse = mapper.readTree(entity.getContent());
-                return jsonResponse.toPrettyString();
+        ObjectMapper mapper = new ObjectMapper();
+        String payloadJson = mapper.writeValueAsString(payload);
+
+        // HTTP client setup
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpPost post = new HttpPost(visionUrl);
+            post.setHeader("Ocp-Apim-Subscription-Key", API_KEY);
+            post.setHeader("Content-Type", "application/json");
+            post.setEntity(new StringEntity(payloadJson));
+
+            try (CloseableHttpResponse response = client.execute(post)) {
+                if (true) {
+                    Map<?, ?> result = mapper.readValue(response.getEntity().getContent(), Map.class);
+                    System.out.println(result);
+                    return mapper.writeValueAsString(result.get("description"));
+                } else {
+                    throw new RuntimeException("Error: " );
+                }
             }
         }
-
-        return null;
     }
 }
